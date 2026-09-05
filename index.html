@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#e0116f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="코드파인더">
+<meta name="description" content="루트음과 코드 종류를 고르면 피아노 건반 위에 코드 구성음을 보여주는 개인용 코드 뷰어">
+<title>코드파인더</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app">
+    <header class="app-header">
+      <h1>코드파인더</h1>
+      <button id="installBtn" class="install-btn" hidden>홈 화면에 추가</button>
+    </header>
+
+    <section class="roots" id="roots" aria-label="루트음 선택"></section>
+
+    <section class="chordType">
+      <select id="chordType" aria-label="코드 종류 선택"></select>
+    </section>
+
+    <button id="playBtn" class="play-banner" type="button">
+      <span class="play-icon" aria-hidden="true">&#9658;</span>
+      <span id="chordLabel">코드를 연주하세요</span>
+    </button>
+
+    <section class="pianoWrap">
+      <div class="pianoScroll" id="pianoScroll">
+        <div class="piano" id="piano"></div>
+      </div>
+    </section>
+
+    <section class="inversions" id="inversions" role="tablist" aria-label="전위 선택"></section>
+
+    <p class="hint">폰 홈 화면에 추가하면 앱처럼 바로 열 수 있어요.</p>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
