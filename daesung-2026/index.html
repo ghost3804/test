@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>2026 대성인 연수 안내</title>
+<meta name="description" content="10월 29일(목)~30일(금) 대성직업전문학교 전 교직원 연수 일정과 준비사항 안내">
+<meta property="og:type" content="website">
+<meta property="og:title" content="2026 대성인 연수 안내 (10/29~10/30)">
+<meta property="og:description" content="일정 확인하시고 준비사항 3가지 꼭 챙겨 주세요! · 대성직업전문학교 전 교직원">
+<meta property="og:image" content="https://ghost3804.github.io/test/daesung-2026/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://ghost3804.github.io/test/daesung-2026/">
+<meta name="theme-color" content="#1559c4">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{
+  --blue:#1559c4; --blue-d:#0d3f91; --blue-l:#e8f0fd;
+  --green:#1d8a4b; --green-d:#13663a; --green-l:#e6f5ec;
+  --ink:#16213a; --sub:#5b6680; --line:#e3e8f1; --bg:#f3f6fb; --card:#fff;
+  --yellow:#ffd23f;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:var(--bg);color:var(--ink);line-height:1.55;word-break:keep-all}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px 40px}
+
+/* HERO */
+.hero{position:relative;background:var(--blue-d);overflow:hidden}
+.hero img{display:block;width:100%;max-width:560px;margin:0 auto;aspect-ratio:1200/630;object-fit:cover}
+.hero-bar{background:linear-gradient(90deg,var(--blue-d),var(--blue));color:#fff;padding:18px 16px 20px;text-align:center}
+.hero-bar .kicker{font-size:13px;opacity:.85;letter-spacing:.02em}
+.hero-bar h1{font-size:26px;font-weight:800;margin:4px 0 6px}
+.hero-bar .date{font-size:16px;font-weight:600}
+.dday{display:inline-flex;align-items:center;gap:8px;margin-top:12px;background:var(--yellow);color:var(--ink);font-weight:800;border-radius:999px;padding:7px 16px;font-size:15px}
+
+/* SECTIONS */
+section{margin-top:18px}
+.card{background:var(--card);border-radius:18px;padding:20px 18px;box-shadow:0 2px 10px rgba(20,40,80,.06)}
+.sec-title{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:800;margin-bottom:12px}
+.sec-title .ico{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:var(--blue-l);font-size:16px}
+
+/* MESSAGE */
+.msg p{font-size:15.5px;margin-bottom:10px;color:#2a3550}
+.msg p:last-of-type{margin-bottom:0}
+.msg .sign{margin-top:14px;text-align:right;font-weight:700;color:var(--blue-d);font-size:15px}
+.hl{background:linear-gradient(transparent 58%,#ffe58a 58%);font-weight:700}
+
+/* CHECKLIST */
+.check{list-style:none;display:flex;flex-direction:column;gap:10px}
+.check li{display:flex;gap:12px;align-items:flex-start;border:1.5px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;transition:.15s;user-select:none;-webkit-tap-highlight-color:transparent}
+.check li .box{flex:none;width:26px;height:26px;border-radius:8px;border:2px solid #b9c3d6;display:grid;place-items:center;color:#fff;font-weight:900;font-size:15px;margin-top:1px}
+.check li strong{display:block;font-size:16px}
+.check li span.d{font-size:13.5px;color:var(--sub)}
+.check li.on{border-color:var(--green);background:var(--green-l)}
+.check li.on .box{background:var(--green);border-color:var(--green)}
+.check li.on .box::after{content:"✓"}
+.progress{margin-top:12px;font-size:13.5px;color:var(--sub);text-align:center}
+.progress b{color:var(--green)}
+
+/* INFO GRID */
+.info{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.info div{background:var(--blue-l);border-radius:14px;padding:12px 14px}
+.info dt{font-size:12.5px;color:var(--blue);font-weight:700}
+.info dd{font-size:14.5px;font-weight:600;margin-top:2px}
+
+/* TABS */
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0}
+.tab{border:0;border-radius:14px;padding:12px 8px;font:inherit;font-weight:800;font-size:16px;background:#fff;color:var(--sub);box-shadow:0 1px 4px rgba(20,40,80,.08);cursor:pointer}
+.tab small{display:block;font-weight:600;font-size:12.5px}
+.tab[data-day="1"].active{background:var(--blue);color:#fff}
+.tab[data-day="2"].active{background:var(--green);color:#fff}
+.day{display:none}
+.day.active{display:block}
+
+.tl{position:relative;padding-left:18px}
+.tl::before{content:"";position:absolute;left:5px;top:8px;bottom:8px;width:2px;background:var(--line)}
+.item{position:relative;background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 6px rgba(20,40,80,.06)}
+.item::before{content:"";position:absolute;left:-18px;top:20px;width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid var(--c)}
+.day[data-day="1"]{--c:var(--blue);--cl:var(--blue-l)}
+.day[data-day="2"]{--c:var(--green);--cl:var(--green-l)}
+.time{font-size:13px;font-weight:700;color:var(--c)}
+.item h3{font-size:17px;margin:2px 0 3px}
+.item .desc{font-size:14px;color:#3b4660}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font-size:12.5px;background:var(--cl);color:var(--ink);border-radius:999px;padding:3px 10px;font-weight:600}
+.note{margin-top:8px;font-size:13px;background:#fff6dc;border-left:3px solid #f2b705;padding:7px 10px;border-radius:6px;color:#5a4500}
+.item.prep{outline:2px solid #f2b705}
+.item.brk{background:transparent;box-shadow:none;padding:2px 16px;margin-bottom:8px;font-size:12.5px;color:var(--sub)}
+.item.brk::before{width:8px;height:8px;left:-16px;top:8px;border-width:2px;border-color:#c5cddd}
+.item.now{box-shadow:0 0 0 2px var(--c),0 4px 14px rgba(20,40,80,.12)}
+.item.now .time::after{content:" · 지금 진행 중";color:#e0384b}
+.item.done{opacity:.55}
+
+/* TIP */
+.tip{background:linear-gradient(135deg,#fff7d6,#ffe9a8);border-radius:18px;padding:18px;display:flex;gap:12px;align-items:flex-start}
+.tip .big{font-size:30px;line-height:1}
+.tip strong{font-size:16px}
+.tip p{font-size:14.5px;color:#4d3d00;margin-top:3px}
+
+/* POSTER */
+.poster img{width:100%;border-radius:12px;display:block;cursor:zoom-in}
+.poster .cap{font-size:12.5px;color:var(--sub);text-align:center;margin-top:8px}
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;overflow:auto;z-index:20}
+.lightbox.open{display:block}
+.lightbox img{width:100%;max-width:900px;display:block;margin:0 auto}
+.lightbox button{position:fixed;top:12px;right:12px;width:42px;height:42px;border-radius:50%;border:0;background:#fff;font-size:20px;font-weight:800}
+
+/* SHARE + FOOTER */
+.share{display:block;width:100%;margin-top:18px;border:0;border-radius:14px;padding:15px;font:inherit;font-weight:800;font-size:16px;background:var(--yellow);color:#3a2f00;cursor:pointer}
+footer{text-align:center;margin-top:26px;font-size:13px;color:var(--sub)}
+footer b{display:block;color:var(--blue-d);font-size:16px;margin-top:4px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#16213a;color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;transition:.25s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <img src="og.jpg" alt="2026 대성인 연수 포스터 상단 – 함께 배우고, 함께 소통하고, 더 나은 내일을 만들어가는 대성인">
+  <div class="hero-bar">
+    <div class="kicker">대성직업전문학교 전 교직원 대상</div>
+    <h1>2026 대성인 연수</h1>
+    <div class="date">10월 29일(목) ~ 10월 30일(금)</div>
+    <div class="dday" id="dday">D-6</div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="card msg">
+    <div class="sec-title"><span class="ico">📢</span>안내 말씀</div>
+    <p>10월 29일 ~ 30일 교직원 연수 일정입니다. 일정 확인하시고 궁금한 사항은 저에게 문의하시면 답변해 드리겠습니다.</p>
+    <p>연수 일정에 준비 사항이 있으니 <span class="hl">아래 3가지를 꼭 챙겨 주십시오.</span></p>
+    <p>아무쪼록 법인에서 신중히 고민해서 결정된 부분이니 적극적으로 협조해 주시면 감사하겠습니다.</p>
+    <div class="sign">김진호 부장 드림</div>
+  </section>
+
+  <section class="card">
+    <div class="sec-title"><span class="ico">✅</span>준비사항 체크</div>
+    <ul class="check" id="check">
+      <li data-k="google"><span class="box"></span><div><strong>Google 회원가입 후 로그인 준비</strong><span class="d">1일 차 10:10 엑셀 실무(생성형AI 활용) 특강에 필요합니다. 비밀번호 미리 확인!</span></div></li>
+      <li data-k="cert"><span class="box"></span><div><strong>공동인증서 USB에 담아오기</strong><span class="d">1일 차 11:10 행정지원시스템 특강에서 로그인할 때 사용합니다.</span></div></li>
+      <li data-k="heart"><span class="box"></span><div><strong>열심히 참여하고자 하는 마음가짐</strong><span class="d">가장 중요한 준비물입니다 😊</span></div></li>
+    </ul>
+    <div class="progress" id="progress">눌러서 체크해 보세요 · <b>0</b>/3 완료</div>
+  </section>
+
+  <section class="tip">
+    <div class="big">🎲</div>
+    <div>
+      <strong>2일 차 점심은 랜덤 조 식사!</strong>
+      <p>1일 차 오후에 4인 1조를 뽑아 다음 날 함께 식사합니다. 미리 여러 직원분들과 친해져 두시면 좋겠죠? 참고로 <b>대표님도 랜덤 인원에 포함</b>됩니다 ^^</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="sec-title"><span class="ico">📌</span>연수 개요</div>
+    <dl class="info">
+      <div><dt>일자</dt><dd>10.29(목) ~ 10.30(금)</dd></div>
+      <div><dt>장소</dt><dd>본관 202호 · 본관 상담실</dd></div>
+      <div><dt>주제</dt><dd>함께 성장하는 대성, 함께 도약하는 대성인</dd></div>
+      <div><dt>대상</dt><dd>대성직업전문학교 전 교직원</dd></div>
+    </dl>
+  </section>
+
+  <section>
+    <div class="tabs">
+      <button class="tab active" data-day="1">1일 차<small>10월 29일(목)</small></button>
+      <button class="tab" data-day="2">2일 차<small>10월 30일(금)</small></button>
+    </div>
+
+    <div class="day active" data-day="1" data-date="2026-10-29">
+      <div class="tl">
+        <div class="item" data-s="09:10" data-e="09:20"><div class="time">09:10 – 09:20</div><h3>인사말</h3><div class="desc">교직원 연수 시작을 알리는 인사말</div><div class="meta"><span class="chip">👤 최수철 대표</span><span class="chip">📍 본관 202호</span></div></div>
+        <div class="item" data-s="09:20" data-e="10:00"><div class="time">09:20 – 10:00</div><h3>OT</h3><div class="desc">연수 일정 안내 및 기타 안내사항</div><div class="meta"><span class="chip">👤 최하웅 사무국장</span><span class="chip">📍 본관 202호</span></div></div>
+        <div class="item brk">10:00 – 10:10 휴식</div>
+        <div class="item prep" data-s="10:10" data-e="11:00"><div class="time">10:10 – 11:00</div><h3>주제특강 Ⅰ · 엑셀 실무</h3><div class="desc">업무 속도 향상을 위한 엑셀 실무 (생성형AI 활용)</div><div class="meta"><span class="chip">👤 김진호 부장</span><span class="chip">📍 본관 202호</span></div><div class="note">⚠️ Google 회원가입 필수 — 로그인 준비해 오세요</div></div>
+        <div class="item brk">11:00 – 11:10 휴식</div>
+        <div class="item prep" data-s="11:10" data-e="12:00"><div class="time">11:10 – 12:00</div><h3>주제특강 Ⅱ · 행정지원시스템</h3><div class="desc">행정지원시스템 안내 및 활용방법</div><div class="meta"><span class="chip">👤 추민순 부장</span><span class="chip">📍 본관 202호</span></div><div class="note">⚠️ 공동인증서(USB) 지참</div></div>
+        <div class="item" data-s="12:00" data-e="13:30"><div class="time">12:00 – 13:30</div><h3>중식</h3><div class="desc">점심식사</div><div class="meta"><span class="chip">👥 전 교직원</span><span class="chip">📍 구내식당</span></div></div>
+        <div class="item" data-s="13:30" data-e="15:30"><div class="time">13:30 – 15:30</div><h3>주제토론</h3><div class="desc">발제 ‘행복한 학교생활을 위한 나의 생각은?’</div><div class="meta"><span class="chip">👤 최하웅 사무국장</span><span class="chip">📍 본관 상담실</span></div><div class="note">발제자: 최하웅 사무국장</div></div>
+        <div class="item" data-s="15:30" data-e="16:00"><div class="time">15:30 – 16:00</div><h3>조 추첨 🎲</h3><div class="desc">다음 날 점심식사를 위한 조 추첨</div><div class="meta"><span class="chip">👤 최하웅 사무국장</span><span class="chip">📍 본관 상담실</span></div><div class="note">4인 1조 구성</div></div>
+        <div class="item" data-s="16:00" data-e="18:00"><div class="time">16:00 – 18:00</div><h3>기관 홍보</h3><div class="desc">담당 구역별 홍보 활동 (조별)</div><div class="meta"><span class="chip">👤 취업정보실</span><span class="chip">📍 지정 구역</span></div><div class="note">정해진 조에 따라 지정된 구역별로 홍보</div></div>
+      </div>
+    </div>
+
+    <div class="day" data-day="2" data-date="2026-10-30">
+      <div class="tl">
+        <div class="item" data-s="09:10" data-e="09:30"><div class="time">09:10 – 09:30</div><h3>환경정리 안내</h3><div class="desc">환경정리 일정 및 담당 구역 안내</div><div class="meta"><span class="chip">👤 김용천 과장</span><span class="chip">📍 본관 상담실</span></div></div>
+        <div class="item" data-s="09:30" data-e="12:00"><div class="time">09:30 – 12:00</div><h3>환경정리</h3><div class="desc">교내 환경정리</div><div class="meta"><span class="chip">👤 각 부서장</span><span class="chip">📍 지정 구역</span></div><div class="note">지정된 구역별 정리 (부서별)</div></div>
+        <div class="item" data-s="12:00" data-e="14:00"><div class="time">12:00 – 14:00</div><h3>랜덤식사 🍚</h3><div class="desc">전날 조 추첨 결과대로 조별 식사</div><div class="meta"><span class="chip">👤 각 조 조장</span><span class="chip">📍 외부 식당</span></div><div class="note">조별로 식당을 정해서 이동 · 행정직원 포함 시 내부에서 배달음식</div></div>
+        <div class="item" data-s="14:00" data-e="14:30"><div class="time">14:00 – 14:30</div><h3>이동</h3><div class="desc">봉사활동 장소로 이동</div><div class="meta"><span class="chip">👤 각 조 조장</span></div><div class="note">조원 모두 차량이 없을 시 대중교통 이용</div></div>
+        <div class="item" data-s="14:30" data-e="18:00"><div class="time">14:30 – 18:00</div><h3>봉사활동 · 줍깅 🌿</h3><div class="desc">지정된 장소에서 줍깅(걸으며 쓰레기 줍기)</div><div class="meta"><span class="chip">👤 각 조 조장</span><span class="chip">📍 추후 공개</span></div><div class="note">봉사활동 사이트 회원가입 후 인증 필요 · 편한 복장과 운동화 권장</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card poster">
+    <div class="sec-title"><span class="ico">🖼️</span>연수 포스터</div>
+    <img src="poster.jpg" alt="2026 대성인 연수 전체 포스터" id="posterImg" loading="lazy">
+    <div class="cap">이미지를 누르면 크게 볼 수 있습니다</div>
+  </section>
+
+  <button class="share" id="shareBtn">🔗 이 안내 페이지 링크 복사하기</button>
+
+  <footer>
+    궁금한 사항은 언제든 문의해 주세요
+    <b>김진호 부장</b>
+    <div style="margin-top:14px">(재)대원산업기술교육원 · 대성직업전문학교</div>
+  </footer>
+</main>
+
+<div class="lightbox" id="lb"><button aria-label="닫기">✕</button><img src="poster.jpg" alt="2026 대성인 연수 포스터 확대"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  // KST 기준 현재 시각
+  function nowKST(){const n=new Date();return new Date(n.getTime()+(n.getTimezoneOffset()+540)*60000);}
+  const now=nowKST();
+  const today=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
+
+  // D-day
+  const start=new Date(2026,9,29), d0=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const diff=Math.round((start-d0)/86400000), dd=document.getElementById("dday");
+  if(diff>0) dd.textContent="🗓️ 연수까지 D-"+diff;
+  else if(today==="2026-10-29") dd.textContent="🔥 오늘은 연수 1일 차!";
+  else if(today==="2026-10-30") dd.textContent="🔥 오늘은 연수 2일 차!";
+  else dd.textContent="🙏 모두 수고 많으셨습니다";
+
+  // 탭
+  const tabs=document.querySelectorAll(".tab"), days=document.querySelectorAll(".day");
+  function show(n){tabs.forEach(t=>t.classList.toggle("active",t.dataset.day==n));days.forEach(d=>d.classList.toggle("active",d.dataset.day==n));}
+  tabs.forEach(t=>t.addEventListener("click",()=>show(t.dataset.day)));
+  if(today==="2026-10-30") show("2");
+
+  // 진행 중 표시
+  const hm=now.getHours()*60+now.getMinutes(), toM=s=>{const[a,b]=s.split(":");return +a*60+ +b;};
+  days.forEach(d=>{
+    if(d.dataset.date!==today && d.dataset.date>today) return;
+    d.querySelectorAll(".item[data-s]").forEach(it=>{
+      if(d.dataset.date<today){it.classList.add("done");return;}
+      const s=toM(it.dataset.s), e=toM(it.dataset.e);
+      if(hm>=e) it.classList.add("done"); else if(hm>=s) it.classList.add("now");
+    });
+  });
+
+  // 체크리스트 (이 기기에만 저장)
+  const KEY="daesung2026-check", items=document.querySelectorAll("#check li"), prog=document.getElementById("progress");
+  let st={}; try{st=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+  function render(){let c=0;items.forEach(li=>{const on=!!st[li.dataset.k];li.classList.toggle("on",on);if(on)c++;});
+    prog.innerHTML=c===3?"<b>준비 완료!</b> 연수 때 뵙겠습니다 🙌":"눌러서 체크해 보세요 · <b>"+c+"</b>/3 완료";}
+  items.forEach(li=>li.addEventListener("click",()=>{st[li.dataset.k]=!st[li.dataset.k];try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}render();}));
+  render();
+
+  // 포스터 확대
+  const lb=document.getElementById("lb");
+  document.getElementById("posterImg").addEventListener("click",()=>lb.classList.add("open"));
+  lb.addEventListener("click",()=>lb.classList.remove("open"));
+
+  // 링크 복사
+  const toast=document.getElementById("toast");
+  function say(m){toast.textContent=m;toast.classList.add("show");setTimeout(()=>toast.classList.remove("show"),1800);}
+  document.getElementById("shareBtn").addEventListener("click",async()=>{
+    const url=location.href.split("#")[0];
+    try{await navigator.clipboard.writeText(url);say("링크가 복사되었습니다");}
+    catch(e){const t=document.createElement("textarea");t.value=url;document.body.appendChild(t);t.select();try{document.execCommand("copy");say("링크가 복사되었습니다");}catch(_){say(url);}t.remove();}
+  });
+})();
+</script>
+</body>
+</html>
