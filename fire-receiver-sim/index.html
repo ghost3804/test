@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P형 수신기 실습 시뮬레이터</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* layout: 왼쪽 평면도(현장) + 오른쪽 수신기(방재실), 아래에 실습 과제와 동작 기록 */
+:root{
+  --bg:#eceeed; --surface:#fafbfa; --panel:#d7dcd9; --ink:#1b2321; --muted:#5a6763; --line:#c5ccc8;
+  --fire:#c8281e; --ok:#1c8748; --warn:#b97c00; --lamp-off:#aab3af; --room:#f3f5f4;
+  --font-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#131817; --surface:#1c2322; --panel:#283130; --ink:#e5ebe9; --muted:#98a6a1; --line:#34413d;
+    --fire:#ff5a4d; --ok:#3fcf7f; --warn:#f0b429; --lamp-off:#4a5653; --room:#202827; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#131817; --surface:#1c2322; --panel:#283130; --ink:#e5ebe9; --muted:#98a6a1; --line:#34413d;
+  --fire:#ff5a4d; --ok:#3fcf7f; --warn:#f0b429; --lamp-off:#4a5653; --room:#202827; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 40px;display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
+h1{margin:0;font-size:24px;font-weight:700;letter-spacing:-.01em;text-wrap:balance}
+header p{margin:4px 0 0;color:var(--muted);max-width:62ch}
+h2{margin:0 0 10px;font-size:13px;font-weight:600;color:var(--muted);letter-spacing:.04em}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.sound{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:8px 14px;font-weight:600}
+.sound[aria-pressed="true"]{border-color:var(--ok);color:var(--ok)}
+.main{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,1fr);gap:16px;align-items:start}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px}
+.plan svg{display:block;width:100%;height:auto}
+.hint{margin:10px 0 0;color:var(--muted);font-size:13.5px}
+/* svg */
+.room{fill:var(--room);stroke:var(--ink);stroke-width:2}
+.rlabel{font:600 12px var(--font-body);fill:var(--muted)}
+.zno{font:600 11px var(--font-mono);fill:var(--muted)}
+.wire{fill:none;stroke:var(--muted);stroke-width:2.2;stroke-linejoin:round}
+.wire.live{stroke:var(--fire);stroke-dasharray:7 5;animation:flow .5s linear infinite}
+.wire.cut{stroke:var(--lamp-off);stroke-dasharray:2 5}
+@keyframes flow{to{stroke-dashoffset:-12}}
+.dev{cursor:pointer}
+.det-body{fill:var(--surface);stroke:var(--ink);stroke-width:2}
+.det-led{fill:var(--lamp-off)}
+.det.on .det-led{fill:var(--fire)}
+.det.on .det-body{stroke:var(--fire)}
+.heat{fill:none;stroke:var(--warn);stroke-width:2;opacity:0}
+.det.heating .heat{opacity:1;animation:pulse .9s ease-out infinite}
+@keyframes pulse{from{r:13;opacity:.9}to{r:26;opacity:0}}
+.mcp-body{fill:var(--fire);stroke:var(--ink);stroke-width:1.5}
+.mcp-btn{fill:#fff;stroke:var(--ink);stroke-width:1.2}
+.mcp.on .mcp-btn{fill:#3a3a3a}
+.mcp-led{fill:var(--lamp-off)}
+.mcp.on .mcp-led{fill:#ffd23f}
+.cutpt circle{fill:var(--surface);stroke:var(--ink);stroke-width:1.5}
+.cutpt text{font:600 11px var(--font-mono);fill:var(--ink);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.cutpt.cut circle{fill:var(--warn)}
+.term{fill:var(--ink)}
+.strobe-body{fill:var(--fire);stroke:var(--ink);stroke-width:1.5}
+.strobe-lens{fill:#f4f4f4;stroke:var(--ink);stroke-width:1}
+.strobe.on .strobe-lens{animation:flash .5s steps(1) infinite}
+@keyframes flash{0%{fill:#fff;filter:drop-shadow(0 0 7px #fff)}50%{fill:#9a9a9a;filter:none}}
+.exit{fill:var(--ok);stroke:var(--ink);stroke-width:1}
+.exit-t{font:700 8px var(--font-mono);fill:#fff;text-anchor:middle}
+.small{font:500 10px var(--font-body);fill:var(--muted)}
+.rcv-box{fill:var(--panel);stroke:var(--ink);stroke-width:2}
+/* receiver */
+.rcv{background:var(--panel);border:2px solid var(--ink);border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:14px}
+.plate{display:flex;justify-content:space-between;align-items:baseline;gap:8px;border-bottom:1px solid var(--ink);padding-bottom:8px}
+.plate b{font-size:15px}
+.plate span{font:500 12px var(--font-mono);color:var(--muted)}
+.lamps{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.lamp{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11.5px;text-align:center;line-height:1.25;font-weight:500}
+.bulb{width:22px;height:22px;border-radius:50%;background:var(--lamp-off);border:2px solid var(--ink)}
+.bulb.red.on{background:var(--fire);box-shadow:0 0 10px var(--fire)}
+.bulb.green.on{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.bulb.amber.on{background:var(--warn);box-shadow:0 0 8px var(--warn)}
+.bulb.blink.on{animation:blink .7s steps(1) infinite}
+@keyframes blink{50%{background:var(--lamp-off);box-shadow:none}}
+.fire-big .bulb{width:34px;height:34px}
+.zones{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;background:var(--surface);border:1px solid var(--ink);border-radius:4px;padding:10px 6px}
+.zone{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;text-align:center;line-height:1.2}
+.zone .n{font:600 12px var(--font-mono)}
+.cont{font:600 10.5px var(--font-mono);height:14px;color:var(--muted)}
+.cont.good{color:var(--ok)} .cont.bad{color:var(--fire)}
+.sw{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sw button{background:var(--surface);border:2px solid var(--ink);border-radius:4px;padding:9px 4px;font-size:12.5px;font-weight:600;line-height:1.25;min-height:52px}
+.sw button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.sw button:active{transform:translateY(1px)}
+.meter{font:600 12px var(--font-mono);text-align:right;color:var(--muted);min-height:18px}
+.meter.good{color:var(--ok)}
+/* bottom */
+.bottom{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px}
+ol.tasks{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.tasks li{display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:start}
+.tick{width:20px;height:20px;border:2px solid var(--muted);border-radius:4px;margin-top:2px;display:grid;place-items:center;font:700 13px var(--font-mono);color:transparent}
+.tasks li.done .tick{background:var(--ok);border-color:var(--ok);color:#fff}
+.tasks li.done{color:var(--muted)}
+.tasks small{display:block;color:var(--muted);font-size:12.5px}
+#log{margin:0;padding:0;list-style:none;font-size:13.5px;display:flex;flex-direction:column;gap:6px;min-height:150px}
+#log li{display:grid;grid-template-columns:62px 1fr;gap:8px}
+#log time{font:500 12px var(--font-mono);color:var(--muted);padding-top:1px}
+#log li.alarm{color:var(--fire);font-weight:600}
+.reset{margin-top:12px;background:none;border:1px solid var(--line);border-radius:6px;padding:6px 12px;font-size:13px}
+@media (max-width:860px){.main,.bottom{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.wire.live,.det.heating .heat,.strobe.on .strobe-lens,.bulb.blink.on{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>P형 1급 수신기 5회로 실습 시뮬레이터</h1>
+      <p>감지기와 발신기를 직접 동작시키고, 수신기 표시등과 스위치가 어떻게 반응하는지 확인하는 소방산업기사 실습용 화면입니다.</p>
+    </div>
+    <button class="sound" id="soundBtn" aria-pressed="false">경종 소리 켜기</button>
+  </header>
+
+  <div class="main">
+    <section class="card plan" aria-label="현장 평면도">
+      <h2>현장 평면도</h2>
+      <svg id="plan" viewBox="0 0 720 460" role="img" aria-label="5개 경계구역 평면도와 배선"></svg>
+      <p class="hint">감지기를 누르면 시험기로 열을 가합니다(8초 뒤 식음). 빨간 발신기를 누르면 버튼이 눌린 채 유지되고, 다시 누르면 원위치됩니다. 수신기 위쪽 ✂ 지점을 누르면 그 회로선이 끊어집니다.</p>
+    </section>
+
+    <section class="rcv" aria-label="수신기">
+      <div class="plate"><b>P형 1급 수신기</b><span>5회로 · DC 24V</span></div>
+      <div class="lamps">
+        <div class="lamp"><span class="bulb green on" id="lAc"></span>교류전원</div>
+        <div class="lamp fire-big"><span class="bulb red" id="lFire"></span>화재</div>
+        <div class="lamp"><span class="bulb red" id="lMcp"></span>발신기</div>
+        <div class="lamp"><span class="bulb amber blink" id="lSw"></span>스위치주의</div>
+        <div class="lamp"><span class="bulb green on" id="lBat"></span>예비전원</div>
+      </div>
+      <div>
+        <h2>지구표시등</h2>
+        <div class="zones" id="zones"></div>
+      </div>
+      <div>
+        <h2>조작 스위치</h2>
+        <div class="sw">
+          <button id="sMain" aria-pressed="false">주경종<br>정지</button>
+          <button id="sZone" aria-pressed="false">지구경종<br>정지</button>
+          <button id="sCont" aria-pressed="false">도통<br>시험</button>
+          <button id="sReset">복구</button>
+          <button id="sBat">예비전원<br>시험</button>
+          <button id="sTest">동작<br>시험</button>
+        </div>
+      </div>
+      <div class="meter" id="meter" aria-live="polite"></div>
+    </section>
+  </div>
+
+  <div class="bottom">
+    <section class="card">
+      <h2>실습 과제 (동작하면 자동으로 체크됩니다)</h2>
+      <ol class="tasks" id="tasks"></ol>
+      <button class="reset" id="resetAll">처음 상태로 되돌리기</button>
+    </section>
+    <section class="card">
+      <h2>동작 기록</h2>
+      <ul id="log" aria-live="polite"></ul>
+    </section>
+  </div>
+</div>
+
+<script>
+const NS="http://www.w3.org/2000/svg";
+const Z=[
+ {name:"전기실습실",room:[20,20,220,190],det:[130,90],mcp:[60,170],wire:"M430,350 V290 H60 V90 H130",tx:430},
+ {name:"소방실습실",room:[250,20,220,190],det:[360,90],mcp:[290,170],wire:"M480,350 V282 H290 V90 H360",tx:480},
+ {name:"강의실",room:[480,20,220,190],det:[590,90],mcp:null,wire:"M530,350 V274 H500 V90 H590",tx:530},
+ {name:"복도",room:[20,220,680,80],det:[160,250],mcp:[330,250],wire:"M580,350 V250 H160",tx:580},
+ {name:"사무실",room:[20,310,330,130],det:[185,375],mcp:null,wire:"M630,350 V298 H185 V375",tx:630},
+];
+const st={heat:[0,0,0,0,0],pressed:[0,0,0,0,0],cut:[0,0,0,0,0],latched:[0,0,0,0,0],mainStop:false,zoneStop:false,cont:false,sound:false};
+const done=[0,0,0,0,0];
+const TASKS=[
+ ["2회로 감지기를 동작시켜 화재 신호 보내기","소방실습실 감지기를 누르고 화재등과 지구표시등 2번을 확인합니다."],
+ ["화재 중에 주경종 정지 스위치 누르기","스위치가 정상 위치가 아니면 스위치주의등이 깜박입니다."],
+ ["스위치를 원위치하고 복구해 평상시 상태 만들기","감지기는 식으면 스스로 돌아오지만 수신기는 복구를 눌러야 꺼집니다."],
+ ["발신기를 누른 채로 복구 눌러 보기","현장 발신기를 원위치하지 않으면 곧바로 다시 화재가 표시됩니다."],
+ ["회로선을 하나 끊고 도통시험으로 찾아내기","끊어진 회로는 감지기가 동작해도 수신기에 신호가 오지 않습니다."],
+];
+const $=id=>document.getElementById(id);
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+function txt(parent,x,y,cls,s,anchor){const t=el("text",{x,y,class:cls},parent);if(anchor)t.setAttribute("text-anchor",anchor);t.textContent=s;return t}
+function clickable(g,label,fn){g.setAttribute("tabindex","0");g.setAttribute("role","button");g.setAttribute("aria-label",label);g.addEventListener("click",fn);g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();fn()}})}
+
+// ---------- 평면도 그리기
+const svg=$("plan"),wires=[],dets=[],mcps=[],cuts=[],strobes=[];
+Z.forEach((z,i)=>{const [x,y,w,h]=z.room;el("rect",{x,y,width:w,height:h,class:"room"},svg);
+  txt(svg,x+10,y+18,"rlabel",z.name);txt(svg,x+w-10,y+18,"zno",(i+1)+"회로","end")});
+el("rect",{x:370,y:310,width:330,height:130,class:"rcv-box"},svg);
+txt(svg,535,410,"rlabel","방재실 · P형 1급 수신기","middle");
+txt(svg,535,426,"small","단자 1 ~ 5 (회로선)","middle");
+Z.forEach((z,i)=>{wires[i]=el("path",{d:z.wire,class:"wire"},svg)});
+Z.forEach((z,i)=>{
+  el("rect",{x:z.tx-5,y:350,width:10,height:10,class:"term"},svg);txt(svg,z.tx,378,"zno",i+1,"middle");
+  const c=el("g",{class:"cutpt dev"},svg);el("circle",{cx:z.tx,cy:328,r:10},c);txt(c,z.tx,328,"","✂");
+  clickable(c,(i+1)+"회로 회로선 끊기 또는 다시 잇기",()=>toggleCut(i));cuts[i]=c;
+  const [dx,dy]=z.det,d=el("g",{class:"det dev"},svg);
+  el("circle",{cx:dx,cy:dy,r:13,class:"heat"},d);el("circle",{cx:dx,cy:dy,r:13,class:"det-body"},d);el("circle",{cx:dx,cy:dy,r:4,class:"det-led"},d);
+  txt(svg,dx,dy+28,"small","차동식 감지기","middle");txt(svg,dx+20,dy-12,"small","종단저항");
+  clickable(d,(i+1)+"회로 감지기에 열 가하기",()=>heat(i));dets[i]=d;
+  if(z.mcp){const [mx,my]=z.mcp,m=el("g",{class:"mcp dev"},svg);
+    el("circle",{cx:mx,cy:my,r:13,class:"mcp-body"},m);el("circle",{cx:mx,cy:my,r:5.5,class:"mcp-btn"},m);el("circle",{cx:mx+9,cy:my-9,r:3,class:"mcp-led"},m);
+    txt(svg,mx+18,my+4,"small","발신기");clickable(m,(i+1)+"회로 발신기 누르기 또는 원위치",()=>press(i));mcps[i]=m}
+});
+[[436,160],[610,268],[316,412]].forEach(([x,y])=>{const g=el("g",{class:"strobe"},svg);el("rect",{x,y,width:22,height:16,rx:2,class:"strobe-body"},g);el("rect",{x:x+7,y:y+3,width:8,height:10,class:"strobe-lens"},g);strobes.push(g)});
+txt(svg,636,280,"small","시각경보기");
+el("rect",{x:30,y:228,width:30,height:14,class:"exit"},svg);txt(svg,45,238,"exit-t","EXIT");txt(svg,66,239,"small","유도등");
+
+// ---------- 수신기 지구표시등, 과제
+Z.forEach((z,i)=>{const d=document.createElement("div");d.className="zone";
+  d.innerHTML='<span class="n">'+(i+1)+'</span><span class="bulb red" id="zl'+i+'"></span><span>'+z.name+'</span><span class="cont" id="zc'+i+'"></span>';$("zones").appendChild(d)});
+TASKS.forEach((t,i)=>{const li=document.createElement("li");li.id="t"+i;li.innerHTML='<span class="tick">✓</span><span>'+t[0]+'<small>'+t[1]+'</small></span>';$("tasks").appendChild(li)});
+
+// ---------- 동작 로직
+const input=i=>(st.heat[i]||st.pressed[i])&&!st.cut[i];
+const anyFire=()=>st.latched.some(Boolean);
+function log(msg,alarm){const li=document.createElement("li");if(alarm)li.className="alarm";const t=new Date();
+  const hh=n=>String(n).padStart(2,"0");li.innerHTML="<time>"+hh(t.getHours())+":"+hh(t.getMinutes())+":"+hh(t.getSeconds())+"</time><span></span>";
+  li.lastChild.textContent=msg;const ul=$("log");ul.prepend(li);while(ul.children.length>7)ul.lastChild.remove()}
+function scan(){Z.forEach((z,i)=>{if(input(i)&&!st.latched[i]){st.latched[i]=1;log((i+1)+"회로 "+z.name+" 화재 신호 수신. 화재등과 지구표시등 점등, 경종 동작.",true)}});render()}
+const timers=[];
+function heat(i){st.heat[i]=1;clearTimeout(timers[i]);
+  if(st.cut[i])log((i+1)+"회로 감지기가 동작했지만 회로선이 끊어져 수신기에 신호가 오지 않습니다.");
+  timers[i]=setTimeout(()=>{st.heat[i]=0;log((i+1)+"회로 감지기가 식어 스스로 복귀했습니다. 수신기는 복구 전까지 화재 표시를 유지합니다.");scan()},8000);scan()}
+function press(i){st.pressed[i]=st.pressed[i]?0:1;
+  log((i+1)+"회로 발신기 "+(st.pressed[i]?"누름. 발신기 응답등 점등.":"원위치."));
+  if(st.pressed[i]&&st.cut[i])log((i+1)+"회로는 회로선이 끊어져 발신기 신호가 전달되지 않습니다.");scan()}
+function toggleCut(i){st.cut[i]=st.cut[i]?0:1;log((i+1)+"회로 회로선 "+(st.cut[i]?"단선. 평상시에는 수신기에 아무 표시도 나타나지 않습니다.":"다시 연결."));scan()}
+function toggle(key,name){st[key]=!st[key];log(name+" 스위치 "+(st[key]?"누름.":"원위치."));scan()}
+$("sMain").onclick=()=>toggle("mainStop","주경종 정지");
+$("sZone").onclick=()=>toggle("zoneStop","지구경종 정지");
+$("sCont").onclick=()=>toggle("cont","도통시험");
+$("sReset").onclick=()=>{const had=anyFire();st.latched=st.latched.map((_,i)=>input(i)?1:0);
+  if(st.pressed.some((p,i)=>p&&!st.cut[i])){done[3]=1;log("복구했지만 발신기가 눌린 채라 다시 화재가 표시됩니다. 현장 발신기를 먼저 원위치하세요.",true)}
+  else if(anyFire())log("복구했지만 감지기가 아직 동작 중이라 다시 화재가 표시됩니다.",true)
+  else log(had?"복구 완료. 화재 표시가 꺼졌습니다.":"복구 스위치 누름. 표시된 화재가 없습니다.");
+  if(done[0]&&!anyFire()&&!st.mainStop&&!st.zoneStop&&!st.cont)done[2]=1;render()};
+$("sBat").onclick=()=>{const m=$("meter");m.textContent="예비전원 24.6V · 정상";m.className="meter good";log("예비전원시험: 축전지 전압 정상.");setTimeout(()=>{m.textContent="";m.className="meter"},2500)};
+$("sTest").onclick=()=>{log("동작시험: 1~5회로 지구표시등을 차례로 점등해 확인합니다.");
+  Z.forEach((_,i)=>setTimeout(()=>{$("zl"+i).classList.add("on");setTimeout(render,350)},i*400))};
+$("resetAll").onclick=()=>{timers.forEach(clearTimeout);for(const k of["heat","pressed","cut","latched"])st[k]=[0,0,0,0,0];
+  st.mainStop=st.zoneStop=st.cont=false;done.fill(0);$("log").innerHTML="";log("처음 상태로 되돌렸습니다. 평상시 감시 중.");render()};
+
+function render(){const fire=anyFire();
+  if(st.latched[1])done[0]=1;
+  if(fire&&st.mainStop)done[1]=1;
+  if(st.cont&&st.cut.some(Boolean))done[4]=1;
+  Z.forEach((z,i)=>{
+    wires[i].setAttribute("class","wire"+(st.cut[i]?" cut":input(i)?" live":""));
+    dets[i].setAttribute("class","det dev"+(st.heat[i]?" on heating":""));
+    if(mcps[i])mcps[i].setAttribute("class","mcp dev"+(st.pressed[i]?" on":""));
+    cuts[i].setAttribute("class","cutpt dev"+(st.cut[i]?" cut":""));
+    $("zl"+i).classList.toggle("on",!!st.latched[i]);
+    const c=$("zc"+i);c.textContent=st.cont?(st.cut[i]?"단선":"정상"):"";c.className="cont"+(st.cont?(st.cut[i]?" bad":" good"):"")});
+  strobes.forEach(s=>s.setAttribute("class","strobe"+(fire?" on":"")));
+  $("lFire").classList.toggle("on",fire);
+  $("lMcp").classList.toggle("on",st.pressed.some((p,i)=>p&&!st.cut[i]));
+  $("lSw").classList.toggle("on",st.mainStop||st.zoneStop||st.cont);
+  $("sMain").setAttribute("aria-pressed",st.mainStop);$("sZone").setAttribute("aria-pressed",st.zoneStop);$("sCont").setAttribute("aria-pressed",st.cont);
+  done.forEach((d,i)=>$("t"+i).classList.toggle("done",!!d))}
+
+// ---------- 경종 소리 (Web Audio)
+let ctx=null;
+function strike(freq,vol){if(!ctx)return;const t=ctx.currentTime;[1,2.76,5.4].forEach((m,k)=>{const o=ctx.createOscillator(),g=ctx.createGain();
+  o.type="sine";o.frequency.value=freq*m;g.gain.setValueAtTime(vol/(k+1),t);g.gain.exponentialRampToValueAtTime(.0005,t+.22);
+  o.connect(g).connect(ctx.destination);o.start(t);o.stop(t+.25)})}
+setInterval(()=>{if(!st.sound||!ctx||!anyFire())return;if(!st.mainStop)strike(880,.09);if(!st.zoneStop)strike(1320,.05)},125);
+$("soundBtn").onclick=()=>{try{if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();ctx.resume();st.sound=!st.sound}catch(e){st.sound=false}
+  $("soundBtn").setAttribute("aria-pressed",st.sound);$("soundBtn").textContent=st.sound?"경종 소리 끄기":"경종 소리 켜기"};
+
+log("평상시 감시 중. 교류전원과 예비전원 정상.");
+// 열었을 때 바로 동작 모습이 보이도록 예시 상황(3회로 화재)으로 시작
+heat(2);
+</script>
+</body>
+</html>
