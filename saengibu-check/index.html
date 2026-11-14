@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>생기부 활동일자 검증기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@600;800&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* 레이아웃: 위에서 아래로 한 줄 — 파일 넣기 → 과정별 요약 → 유형별 상세 표. 출석부의 남색 잉크와 결석 표시의 붉은색을 기준색으로 사용 */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --ink:#18212f; --muted:#5d6878; --line:#d6dce5;
+  --accent:#1f4e8c; --accent-soft:#e4ecf7;
+  --bad:#b3261e; --bad-soft:#fbe9e7; --warn:#8a5a00; --warn-soft:#fdf1d6; --ok:#1b6b45; --ok-soft:#e2f3ea; --info-soft:#eceff4;
+  --display:"Gothic A1","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+  --body:"IBM Plex Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#11161e; --surface:#1a212c; --ink:#e8edf4; --muted:#9aa6b6; --line:#2e3948;
+    --accent:#8db4ee; --accent-soft:#1f2f47;
+    --bad:#ff8a80; --bad-soft:#3a1f1e; --warn:#f2c462; --warn-soft:#3a2f17; --ok:#7fd3a6; --ok-soft:#183326; --info-soft:#232c39;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11161e; --surface:#1a212c; --ink:#e8edf4; --muted:#9aa6b6; --line:#2e3948;
+  --accent:#8db4ee; --accent-soft:#1f2f47;
+  --bad:#ff8a80; --bad-soft:#3a1f1e; --warn:#f2c462; --warn-soft:#3a2f17; --ok:#7fd3a6; --ok-soft:#183326; --info-soft:#232c39;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6}
+main{max-width:1120px;margin:0 auto;padding:28px 20px 64px;display:flex;flex-direction:column;gap:22px}
+h1{font-family:var(--display);font-weight:800;font-size:26px;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--display);font-weight:600;font-size:17px;margin:0;text-wrap:balance}
+p{margin:0}
+.lead{color:var(--muted);max-width:65ch;margin-top:6px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.between{justify-content:space-between}
+.muted{color:var(--muted)} .small{font-size:13px}
+
+.drop{border:2px dashed var(--line);border-radius:10px;padding:22px 18px;text-align:center;background:var(--bg);transition:border-color .15s,background .15s}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop strong{display:block;font-size:16px;margin-bottom:4px}
+button,.btn{font:inherit;font-weight:600;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:var(--surface);padding:8px 14px;cursor:pointer}
+button.ghost,.btn.ghost{background:transparent;color:var(--accent)}
+button.link{border:0;background:none;color:var(--muted);padding:2px 6px;font-weight:500;text-decoration:underline}
+button:focus-visible,.btn:focus-visible,select:focus-visible,input:focus-visible+.btn{outline:3px solid var(--accent);outline-offset:2px}
+button[disabled]{opacity:.5;cursor:default}
+input[type=file]{position:absolute;width:1px;height:1px;opacity:0}
+select{font:inherit;padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:top}
+td.wrap{white-space:normal;min-width:180px}
+th{background:var(--info-soft);font-weight:600;font-size:13px;position:sticky;top:0}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right}
+.pill{display:inline-block;min-width:34px;text-align:center;padding:1px 9px;border-radius:999px;font-weight:600;font-size:13px}
+.pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.info{background:var(--info-soft);color:var(--muted)}
+.tag{font-size:12px;font-weight:600;padding:2px 8px;border-radius:5px;background:var(--accent-soft);color:var(--accent)}
+.tag.act{background:var(--info-soft);color:var(--muted)}
+.sym{font-size:16px;line-height:1}
+
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:500}
+.tabs button[aria-selected="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.banner{border-radius:8px;padding:10px 14px;font-size:14px}
+.banner.sample{background:var(--warn-soft);color:var(--warn)}
+.banner.err{background:var(--bad-soft);color:var(--bad)}
+.verdict{font-family:var(--display);font-weight:600;font-size:18px}
+ul.notes{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+details summary{cursor:pointer;font-weight:600}
+details>div{margin-top:10px}
+.empty{padding:22px;text-align:center;color:var(--muted)}
+@media (max-width:520px){h1{font-size:22px} main{padding:20px 16px 48px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>생기부 활동일자 검증기</h1>
+    <p class="lead">출석부에 결석으로 표시된 날에 자율·동아리·진로 활동 출석이 기록된 학생을 찾습니다. 파일은 이 브라우저 안에서만 읽고, 어디에도 전송하거나 저장하지 않습니다.</p>
+  </header>
+
+  <section class="card" aria-labelledby="h-files">
+    <h2 id="h-files">1. 파일 넣기</h2>
+    <div class="drop" id="drop">
+      <strong>출석부와 생기부 일자 파일을 여기에 끌어다 놓으세요</strong>
+      <p class="muted small">출석부 1개와 과정별 생기부 일자 파일 여러 개를 한꺼번에 넣어도 됩니다. 어느 파일이 출석부인지는 자동으로 구분합니다.</p>
+      <p style="margin-top:12px"><input type="file" id="pick" accept=".xlsx,.xlsm,.xls" multiple><label for="pick" class="btn">파일 선택</label></p>
+    </div>
+    <div id="msg"></div>
+    <div id="files"></div>
+  </section>
+
+  <section class="card" aria-labelledby="h-sum">
+    <div class="row between">
+      <h2 id="h-sum">2. 과정별 결과</h2>
+      <div class="row">
+        <button id="save" class="ghost" disabled>엑셀로 저장</button>
+        <button id="copy" class="ghost" disabled>현재 표 복사</button>
+      </div>
+    </div>
+    <div id="sampleNote"></div>
+    <p class="verdict" id="verdict"></p>
+    <div class="scroll"><table id="sum"></table></div>
+    <p class="small muted" id="actionMsg" role="status"></p>
+  </section>
+
+  <section class="card" aria-labelledby="h-detail">
+    <h2 id="h-detail">3. 상세 목록</h2>
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <p class="small muted" id="tabDesc"></p>
+    <div class="scroll" style="max-height:560px;overflow-y:auto"><table id="detail"></table></div>
+  </section>
+
+  <section class="card" id="warnCard" aria-labelledby="h-warn">
+    <h2 id="h-warn">확인 사항</h2>
+    <ul class="notes" id="warns"></ul>
+  </section>
+
+  <section class="card">
+    <details>
+      <summary>대조 기준과 파일 형식</summary>
+      <div>
+        <ul class="notes small">
+          <li><b>출석부</b>: 「3월」「4월」처럼 월 이름으로 된 시트를 읽습니다. 학교별 블록에서 성명, 날짜별 표시, 오른쪽 비고의 과정명을 사용합니다.</li>
+          <li><b>생기부 일자 파일</b>: 시트 이름의 괄호 안 글자(자율·동아리·진로)를 활동 종류로 봅니다. A열 이름, 그 오른쪽의 날짜 칸을 모두 활동 출석일로 읽습니다.</li>
+          <li><b>학생 매칭</b>: 성명 + 과정명. 과정은 명단이 가장 많이 겹치는 과정으로 자동 선택하며 직접 바꿀 수 있습니다.</li>
+          <li><b>① 결석일 활동기록</b>: ○ 미인정결석, ◍ 질병결석, ● 기타결석 표시일에 활동이 기록된 경우 — 수정 대상.</li>
+          <li><b>② 입소 전·중탈 후</b>: 출석부 명단 시트(이름·직종·입소·중탈)의 입소일보다 앞서거나 중탈일보다 뒤인 활동 기록.</li>
+          <li><b>③ 지각·조퇴(참고)</b>: ◇◈◆ 지각, □▧■ 조퇴, △▲ 결과 표시일의 활동 기록. 결석은 아니므로 참고용.</li>
+          <li><b>④ 2학기 예정일 결석자</b>: 생기부 파일에서 이름 없이 적혀 있는 일자(2학기 예정)를 전원에게 적용한다고 볼 때 제외해야 하는 학생.</li>
+          <li>출석부가 엑셀에서 열려 있으면 마지막으로 <b>저장한 내용</b>이 읽힙니다. 수정했다면 저장한 뒤 넣으세요.</li>
+        </ul>
+      </div>
+    </details>
+  </section>
+</main>
+
+<script src="./xlsx.full.min.js"></script>
+<script>
+/* 생기부 활동일자 ↔ 출석부 대조 로직 (브라우저·Node 공용) */
+var Core = (function () {
+  var ABS = { '○': '미인정결석', '◍': '질병결석', '●': '기타결석' };
+  var OTH = { '◇': '미인정지각', '◈': '질병지각', '◆': '기타지각', '□': '미인정조퇴', '▧': '질병조퇴', '■': '기타조퇴', '△': '미인정결과', '▲': '기타결과' };
+  var WD = '일월화수목금토';
+
+  function norm(s) { return s == null ? '' : String(s).replace(/\s+/g, ''); }
+  function str(c) { return c && c.t !== 'e' && c.v != null ? String(c.v).trim() : ''; }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function iso(d) { return d.y + '-' + pad(d.m) + '-' + pad(d.d); }
+  function weekday(d) { return WD[new Date(Date.UTC(d.y, d.m - 1, d.d)).getUTCDay()]; }
+  function cmp(a, b) { return a.y - b.y || a.m - b.m || a.d - b.d; }
+
+  function grid(XLSX, ws) {
+    var out = [];
+    if (!ws || !ws['!ref']) return out;
+    var rg = XLSX.utils.decode_range(ws['!ref']);
+    for (var r = 0; r <= rg.e.r; r++) {
+      var row = [];
+      for (var c = 0; c <= rg.e.c; c++) row.push(ws[XLSX.utils.encode_cell({ r: r, c: c })]);
+      out.push(row);
+    }
+    return out;
+  }
+
+  /* 셀에서 날짜 읽기: 날짜 서식 숫자, 또는 "2026-03-11" / "5월 19일" 같은 문자 */
+  function dateOf(XLSX, c, defYear) {
+    if (!c || c.v == null || c.t === 'e') return null;
+    if (c.t === 'n') {
+      if (c.v > 30000 && c.v < 80000 && c.z && XLSX.SSF.is_date(String(c.z))) {
+        var p = XLSX.SSF.parse_date_code(c.v);
+        return p ? { y: p.y, m: p.m, d: p.d } : null;
+      }
+      return null;
+    }
+    if (c.t === 'd' && c.v instanceof Date) return { y: c.v.getFullYear(), m: c.v.getMonth() + 1, d: c.v.getDate() };
+    if (c.t === 's') {
+      var s = String(c.v).trim(), m;
+      if ((m = s.match(/^(\d{4})\s*[-./년]\s*(\d{1,2})\s*[-./월]\s*(\d{1,2})\s*일?$/))) return { y: +m[1], m: +m[2], d: +m[3] };
+      if (defYear && (m = s.match(/^(\d{1,2})\s*월\s*(\d{1,2})\s*일$/))) return { y: defYear, m: +m[1], d: +m[2] };
+    }
+    return null;
+  }
+
+  /* ---------- 출석부 ---------- */
+  function parseAttendance(XLSX, wb) {
+    var recs = [], year = null, months = [], info = {}, hasInfo = false;
+    wb.SheetNames.forEach(function (sn) {
+      var mm = sn.trim().match(/^(\d{1,2})월$/);
+      if (!mm) return;
+      var month = +mm[1], g = grid(XLSX, wb.Sheets[sn]);
+      months.push(month);
+      var ym = g.length && str(g[0][0]).match(/(\d{4})\s*년/);
+      if (ym && !year) year = +ym[1];
+      var school = null, daymap = null, bigo = null;
+      for (var i = 0; i < g.length; i++) {
+        var r = g[i], a = norm(str(r[0])), b = str(r[1]);
+        if (a.indexOf('소속') === 0) { school = b; daymap = null; bigo = null; continue; }
+        if (a === '번호') {
+          for (var j = 6; j < r.length; j++) if (norm(str(r[j])) === '비고') bigo = j;
+          continue;
+        }
+        if (!b && r[2] && Number(r[2].v) === 1) {
+          daymap = {}; var prev = 0;
+          for (var k = 2; k < Math.min(r.length, 40); k++) {
+            var v = r[k] ? Number(r[k].v) : NaN;
+            if (v === prev + 1) { daymap[k] = v; prev = v; } else break;
+          }
+          continue;
+        }
+        if (daymap && b && norm(b) !== '성명' && b.indexOf('귀하') < 0) {
+          var marks = {};
+          for (var col in daymap) { var s = str(r[col]); if (s) marks[daymap[col]] = s; }
+          recs.push({ sheet: sn, month: month, school: school, name: b, course: bigo != null ? norm(str(r[bigo])) : '', marks: marks, row: i + 1 });
+        }
+      }
+    });
+    /* 명단 시트(이름·직종·입소·중탈) */
+    wb.SheetNames.forEach(function (sn) {
+      if (hasInfo) return;
+      var ws = wb.Sheets[sn]; if (!ws || !ws['!ref']) return;
+      var g = grid(XLSX, ws); if (!g.length) return;
+      var h = g[0].map(function (c) { return norm(str(c)); });
+      var ci = { name: h.indexOf('이름'), job: h.indexOf('직종'), ent: h.indexOf('입소'), out: h.indexOf('중탈'), school: h.indexOf('위탁학교') };
+      if (ci.name < 0 || ci.job < 0 || (ci.ent < 0 && ci.out < 0)) return;
+      hasInfo = true;
+      for (var i = 1; i < g.length; i++) {
+        var nm = str(g[i][ci.name]); if (!nm) continue;
+        var key = nm + '|' + norm(str(g[i][ci.job]));
+        (info[key] = info[key] || []).push({
+          ent: ci.ent >= 0 ? dateOf(XLSX, g[i][ci.ent], year) : null,
+          out: ci.out >= 0 ? dateOf(XLSX, g[i][ci.out], year) : null,
+          entRaw: ci.ent >= 0 ? str(g[i][ci.ent]) : '', outRaw: ci.out >= 0 ? str(g[i][ci.out]) : ''
+        });
+      }
+    });
+    var courses = {};
+    recs.forEach(function (r) { if (r.course) (courses[r.course] = courses[r.course] || {})[r.name] = 1; });
+    return { recs: recs, year: year, months: months, info: info, hasInfo: hasInfo, courses: courses };
+  }
+
+  /* ---------- 생기부 일자 파일 ---------- */
+  function parseActivity(XLSX, wb) {
+    var acts = [], planned = {}, names = {}, noDate = [], sheets = [];
+    wb.SheetNames.forEach(function (sn) {
+      var g = grid(XLSX, wb.Sheets[sn]); if (g.length < 2) return;
+      var km = sn.match(/\(([^)]+)\)/), kind = km ? km[1] : sn.trim();
+      var isClub = kind.indexOf('동아리') >= 0, found = 0;
+      for (var i = 1; i < g.length; i++) {
+        var r = g[i], c0 = r[0], nm = c0 && c0.t === 's' ? String(c0.v).trim() : '';
+        if (nm === '작성예시') continue;
+        var dates = [];
+        for (var j = 1; j < r.length; j++) { var d = dateOf(XLSX, r[j], null); if (d) dates.push([j, d]); }
+        if (nm) {
+          names[nm] = 1;
+          if (!dates.length) { noDate.push({ sheet: sn, kind: kind, name: nm, row: i + 1 }); continue; }
+          dates.forEach(function (p) {
+            var j = p[0], txt = [];
+            for (var k = j + 2; k <= j + (isClub ? 3 : 2) && k < r.length; k++) if (r[k] && r[k].t === 's') txt.push(String(r[k].v).trim());
+            var club = isClub && r[1] && r[1].t === 's' ? String(r[1].v).trim() : '';
+            acts.push({ kind: kind, club: club, name: nm, date: p[1], hours: r[j + 1] && r[j + 1].t === 'n' ? r[j + 1].v : '', content: txt.join(' / '), row: i + 1, sheet: sn });
+            found++;
+          });
+        } else if (dates.length && (!c0 || c0.v == null || c0.v === '')) {
+          planned[kind] = planned[kind] || {};
+          dates.forEach(function (p) { planned[kind][iso(p[1])] = p[1]; });
+        }
+      }
+      sheets.push({ name: sn, kind: kind, records: found });
+    });
+    return { acts: acts, planned: planned, names: names, noDate: noDate, sheets: sheets };
+  }
+
+  /* 명단이 가장 많이 겹치는 과정을 고르고, 동률이면 파일명에 들어 있는 과정 */
+  function guessCourse(att, act, fileName) {
+    var best = '', bestScore = -1, fn = norm(fileName);
+    Object.keys(att.courses).forEach(function (c) {
+      var n = 0; for (var nm in act.names) if (att.courses[c][nm]) n++;
+      var score = n * 1000 + (fn.indexOf(c) >= 0 ? c.length : 0);
+      if (score > bestScore) { bestScore = score; best = c; }
+    });
+    return bestScore > 0 ? best : '';
+  }
+
+  /* ---------- 대조 ---------- */
+  function analyze(att, items) {
+    var res = { conf: [], period: [], ref: [], sem2: [], summary: [], warnings: [] };
+    var allCourses = {};
+    att.recs.forEach(function (r) { (allCourses[r.name] = allCourses[r.name] || {})[r.course] = 1; });
+    items.forEach(function (it) {
+      var course = it.course, act = it.act;
+      var rows = att.recs.filter(function (r) { return r.course === course; });
+      var mk = {}, school = {}, perSheet = {}, dup = {}, roster = {};
+      rows.forEach(function (r) {
+        school[r.name] = r.school; roster[r.name] = 1;
+        var k = r.sheet + '|' + r.name; perSheet[k] = (perSheet[k] || 0) + 1; if (perSheet[k] > 1) dup[r.name] = 1;
+        for (var d in r.marks) { var key = r.name + '|' + r.month + '|' + d; (mk[key] = mk[key] || []).push({ s: r.marks[d], sheet: r.sheet, row: r.row }); }
+      });
+      var W = function (t) { res.warnings.push({ course: course, file: it.file, text: t }); };
+      var onlyAtt = Object.keys(roster).filter(function (n) { return !act.names[n]; });
+      var onlyAct = Object.keys(act.names).filter(function (n) { return !roster[n]; });
+      if (onlyAtt.length) W('출석부에만 있는 학생: ' + onlyAtt.join(', '));
+      if (onlyAct.length) W('생기부 파일에만 있는 학생(대조 제외): ' + onlyAct.join(', '));
+      if (Object.keys(dup).length) W('같은 과정 안의 동명이인 — 직접 확인 필요: ' + Object.keys(dup).join(', '));
+      var other = Object.keys(act.names).filter(function (n) { return roster[n] && Object.keys(allCourses[n]).length > 1; });
+      if (other.length) W('다른 과정에 같은 이름이 있어 과정명으로 구분함: ' + other.join(', '));
+      var unk = {};
+      Object.keys(mk).forEach(function (k) { mk[k].forEach(function (x) { if (!ABS[x.s] && !OTH[x.s]) unk[x.s] = 1; }); });
+      if (Object.keys(unk).length) W('범례에 없는 출석부 표시(대조 제외): ' + Object.keys(unk).join(' '));
+      var nd = {}; act.noDate.forEach(function (x) { (nd[x.kind] = nd[x.kind] || []).push(x.name); });
+      Object.keys(nd).forEach(function (k) { W(k + ' 일자가 없는 학생: ' + nd[k].join(', ')); });
+      act.sheets.forEach(function (s) { if (!act.planned[s.kind]) W('2학기 ' + s.kind + ' 예정 일자가 없어 ④ 점검에서 제외'); });
+      var wrongYear = 0, n = [0, 0, 0, 0];
+
+      act.acts.forEach(function (a) {
+        if (!roster[a.name]) return;
+        if (att.year && a.date.y !== att.year) { wrongYear++; return; }
+        var label = a.kind + (a.club ? '(' + a.club + ')' : '');
+        (mk[a.name + '|' + a.date.m + '|' + a.date.d] || []).forEach(function (x) {
+          var rec = { course: course, name: a.name, school: school[a.name] || '', date: iso(a.date), wd: weekday(a.date), act: label, content: a.content, hours: a.hours, sym: x.s, type: ABS[x.s] || OTH[x.s], attLoc: x.sheet + ' 시트 ' + x.row + '행', actLoc: a.sheet + ' ' + a.row + '행' };
+          if (ABS[x.s]) { res.conf.push(rec); n[0]++; } else if (OTH[x.s]) { res.ref.push(rec); n[2]++; }
+        });
+        (att.info[a.name + '|' + course] || []).forEach(function (i) {
+          var base = { course: course, name: a.name, school: school[a.name] || '', date: iso(a.date), wd: weekday(a.date), act: label, content: a.content };
+          if (i.ent && cmp(a.date, i.ent) < 0) { base.type = '입소 전'; base.ref = iso(i.ent); res.period.push(base); n[1]++; }
+          else if (i.out && cmp(a.date, i.out) > 0) { base.type = '중도탈락 후'; base.ref = iso(i.out); res.period.push(base); n[1]++; }
+        });
+      });
+      if (wrongYear) W('출석부 연도(' + att.year + ')와 다른 연도의 활동 일자 ' + wrongYear + '건은 대조하지 않음');
+
+      Object.keys(act.planned).forEach(function (kind) {
+        Object.keys(act.planned[kind]).sort().forEach(function (k) {
+          var d = act.planned[kind][k];
+          if (att.year && d.y !== att.year) return;
+          Object.keys(roster).forEach(function (nm) {
+            (mk[nm + '|' + d.m + '|' + d.d] || []).forEach(function (x) {
+              if (!ABS[x.s]) return;
+              res.sem2.push({ course: course, name: nm, school: school[nm] || '', date: iso(d), wd: weekday(d), act: kind, sym: x.s, type: ABS[x.s], attLoc: x.sheet + ' 시트 ' + x.row + '행' }); n[3]++;
+            });
+          });
+        });
+      });
+      res.summary.push({ course: course, file: it.file, students: Object.keys(roster).length, records: act.acts.length, conf: n[0], period: n[1], ref: n[2], sem2: n[3] });
+    });
+    var by = function (a, b) { return a.course.localeCompare(b.course, 'ko') || a.name.localeCompare(b.name, 'ko') || a.date.localeCompare(b.date); };
+    res.conf.sort(by); res.period.sort(by); res.ref.sort(by); res.sem2.sort(by);
+    return res;
+  }
+
+  var COLS = {
+    conf: [['과정명', 'course'], ['성명', 'name'], ['위탁학교', 'school'], ['일자', 'date'], ['요일', 'wd'], ['활동', 'act'], ['활동내용', 'content'], ['시수', 'hours'], ['표시', 'sym'], ['구분', 'type'], ['출석부 위치', 'attLoc'], ['생기부 파일 위치', 'actLoc']],
+    period: [['과정명', 'course'], ['성명', 'name'], ['위탁학교', 'school'], ['활동일자', 'date'], ['요일', 'wd'], ['활동', 'act'], ['활동내용', 'content'], ['구분', 'type'], ['기준일', 'ref']],
+    sem2: [['과정명', 'course'], ['성명', 'name'], ['위탁학교', 'school'], ['예정일자', 'date'], ['요일', 'wd'], ['활동', 'act'], ['표시', 'sym'], ['구분', 'type'], ['출석부 위치', 'attLoc']]
+  };
+  COLS.ref = COLS.conf;
+
+  function toWorkbook(XLSX, res, meta) {
+    var wb = XLSX.utils.book_new();
+    var sum = [['생기부 창체활동 일자 ↔ 출석부 결석 대조 결과'], [meta || ''], [],
+      ['과정명', '생기부 파일', '학생 수', '활동기록 수', '① 결석일 활동기록', '② 입소전·중탈후', '③ 지각·조퇴(참고)', '④ 2학기 예정일 결석자']];
+    res.summary.forEach(function (s) { sum.push([s.course, s.file, s.students, s.records, s.conf, s.period, s.ref, s.sem2]); });
+    sum.push([], ['[확인 사항]']);
+    res.warnings.forEach(function (w) { sum.push([w.course, w.text]); });
+    var ws = XLSX.utils.aoa_to_sheet(sum); ws['!cols'] = [16, 28, 9, 12, 18, 16, 17, 20].map(function (w) { return { wch: w }; });
+    XLSX.utils.book_append_sheet(wb, ws, '요약');
+    [['conf', '1_결석일 활동기록'], ['period', '2_입소전·중탈후'], ['ref', '3_지각·조퇴(참고)'], ['sem2', '4_2학기 예정일 결석자']].forEach(function (t) {
+      var aoa = [COLS[t[0]].map(function (c) { return c[0]; })];
+      res[t[0]].forEach(function (r) { aoa.push(COLS[t[0]].map(function (c) { return r[c[1]] == null ? '' : r[c[1]]; })); });
+      var s = XLSX.utils.aoa_to_sheet(aoa);
+      s['!cols'] = COLS[t[0]].map(function (c) { return { wch: c[1] === 'content' ? 30 : c[1] === 'school' ? 20 : /Loc|act/.test(c[1]) ? 18 : 12 }; });
+      XLSX.utils.book_append_sheet(wb, s, t[1]);
+    });
+    return wb;
+  }
+
+  return { parseAttendance: parseAttendance, parseActivity: parseActivity, guessCourse: guessCourse, analyze: analyze, toWorkbook: toWorkbook, COLS: COLS, READ_OPTS: { type: 'array', cellNF: true, cellDates: false, cellFormula: false, cellHTML: false } };
+})();
+
+
+</script>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+  var state={att:null,attFile:'',items:[],res:null,tab:'conf',sample:true};
+  var TABS=[['conf','① 결석일 활동기록','결석으로 표시된 날에 활동 출석이 기록된 건입니다. 생기부에서 해당 일자를 지우거나 출석부를 확인하세요.','bad'],
+            ['period','② 입소 전·중탈 후','입소일 이전 또는 중도탈락일 이후 날짜에 활동이 기록된 건입니다.','warn'],
+            ['ref','③ 지각·조퇴(참고)','활동일에 지각·조퇴가 표시된 건입니다. 결석이 아니므로 시수 인정 여부만 판단하면 됩니다.','info'],
+            ['sem2','④ 2학기 예정일 결석자','2학기 예정 일자에 결석한 학생입니다. 일자를 학생별로 배정할 때 제외하세요.','warn']];
+
+  /* 처음 열었을 때 보여 주는 가상 예시 */
+  var SAMPLE={summary:[{course:'제빵',file:'제빵_생기부일자.xlsx',students:18,records:365,conf:2,period:1,ref:1,sem2:1},{course:'한식조리',file:'한식조리_생기부일자.xlsx',students:28,records:644,conf:0,period:0,ref:0,sem2:0}],
+    conf:[{course:'제빵',name:'홍길동',school:'가나고등학교',date:'2026-07-01',wd:'수',act:'진로',content:'정보능력의 활용',hours:5,sym:'○',type:'미인정결석',attLoc:'7월 시트 25행',actLoc:'8.창체(진로) 2행'},
+          {course:'제빵',name:'홍길동',school:'가나고등학교',date:'2026-07-02',wd:'목',act:'동아리(축구부)',content:'실습 / 아웃사이드 슛',hours:2,sym:'○',type:'미인정결석',attLoc:'7월 시트 25행',actLoc:'8.창체(동아리) 2행'}],
+    period:[{course:'제빵',name:'김예시',school:'다라고등학교',date:'2026-03-11',wd:'수',act:'진로',content:'의사소통능력의 개념파악',type:'입소 전',ref:'2026-04-07'}],
+    ref:[{course:'제빵',name:'이보기',school:'마바고등학교',date:'2026-05-07',wd:'목',act:'동아리(독서부)',content:'실습 / 감상문발표',hours:2,sym:'◇',type:'미인정지각',attLoc:'5월 시트 310행',actLoc:'8.창체(동아리) 9행'}],
+    sem2:[{course:'제빵',name:'홍길동',school:'가나고등학교',date:'2026-08-19',wd:'수',act:'진로',sym:'○',type:'미인정결석',attLoc:'8월 시트 25행'}],
+    warnings:[{course:'제빵',text:'2학기 동아리 예정 일자가 없어 ④ 점검에서 제외'}]};
+
+  function pill(n,kind){return '<span class="pill '+(n?kind:'ok')+'">'+n+'</span>'}
+
+  function render(){
+    var res=state.res||SAMPLE; state.sample=!state.res;
+    $('sampleNote').innerHTML=state.sample?'<div class="banner sample">아래는 가상 데이터로 만든 <b>예시 화면</b>입니다. 파일을 넣으면 실제 결과로 바뀝니다.</div>':'';
+    var tot=res.summary.reduce(function(a,s){return a+s.conf},0), who={};
+    res.conf.forEach(function(r){who[r.course+'|'+r.name]=1});
+    $('verdict').textContent=state.sample?'':(tot?'결석일에 활동이 기록된 건: '+tot+'건 ('+Object.keys(who).length+'명)':'결석일에 활동이 기록된 학생이 없습니다.');
+    $('verdict').style.color=tot&&!state.sample?'var(--bad)':'var(--ok)';
+    var h='<thead><tr><th>과정명</th><th>생기부 파일</th><th class="num">학생</th><th class="num">활동기록</th><th class="num">① 결석일 활동</th><th class="num">② 입소 전·중탈 후</th><th class="num">③ 지각·조퇴</th><th class="num">④ 2학기 결석</th></tr></thead><tbody>';
+    res.summary.forEach(function(s){h+='<tr><td><b>'+esc(s.course)+'</b></td><td class="muted">'+esc(s.file)+'</td><td class="num">'+s.students+'</td><td class="num">'+s.records+'</td><td class="num">'+pill(s.conf,'bad')+'</td><td class="num">'+pill(s.period,'warn')+'</td><td class="num">'+pill(s.ref,'info')+'</td><td class="num">'+pill(s.sem2,'warn')+'</td></tr>'});
+    $('sum').innerHTML=h+'</tbody>';
+    $('tabs').innerHTML=TABS.map(function(t){return '<button role="tab" id="tab-'+t[0]+'" data-tab="'+t[0]+'" aria-selected="'+(state.tab===t[0])+'">'+t[1]+' <span class="pill '+(res[t[0]].length?t[3]:'ok')+'">'+res[t[0]].length+'</span></button>'}).join('');
+    var T=TABS.filter(function(t){return t[0]===state.tab})[0], cols=Core.COLS[state.tab], rows=res[state.tab];
+    $('tabDesc').textContent=T[2];
+    if(!rows.length){$('detail').innerHTML='<tbody><tr><td class="empty">해당하는 건이 없습니다.</td></tr></tbody>'}
+    else{
+      var d='<thead><tr>'+cols.map(function(c){return '<th>'+c[0]+'</th>'}).join('')+'</tr></thead><tbody>';
+      rows.forEach(function(r){d+='<tr>'+cols.map(function(c){var v=esc(r[c[1]]);return c[1]==='sym'?'<td class="sym">'+v+'</td>':c[1]==='content'?'<td class="wrap">'+v+'</td>':c[1]==='name'?'<td><b>'+v+'</b></td>':'<td>'+v+'</td>'}).join('')+'</tr>'});
+      $('detail').innerHTML=d+'</tbody>';
+    }
+    $('warnCard').style.display=res.warnings.length?'':'none';
+    $('warns').innerHTML=res.warnings.map(function(w){return '<li><b>'+esc(w.course)+'</b> · '+esc(w.text)+'</li>'}).join('');
+    $('save').disabled=$('copy').disabled=state.sample;
+  }
+
+  function renderFiles(){
+    var h='';
+    if(state.att||state.items.length){
+      h='<div class="scroll"><table><thead><tr><th>구분</th><th>파일</th><th>내용</th><th>대조할 과정</th><th></th></tr></thead><tbody>';
+      if(state.att){var a=state.att;h+='<tr><td><span class="tag">출석부</span></td><td>'+esc(state.attFile)+'</td><td>'+(a.year||'')+'년 · '+a.months.length+'개월 · 과정 '+Object.keys(a.courses).length+'개</td><td class="muted">—</td><td><button class="link" data-rm="att">빼기</button></td></tr>'}
+      state.items.forEach(function(it,i){
+        var opts='<option value="">과정 선택</option>'+(state.att?Object.keys(state.att.courses).sort().map(function(c){return '<option'+(c===it.course?' selected':'')+'>'+esc(c)+'</option>'}).join(''):'');
+        h+='<tr><td><span class="tag act">생기부 일자</span></td><td>'+esc(it.file)+'</td><td>학생 '+Object.keys(it.act.names).length+'명 · 활동기록 '+it.act.acts.length+'건</td><td><select id="course-'+i+'" data-i="'+i+'" aria-label="'+esc(it.file)+' 대조할 과정"'+(state.att?'':' disabled')+'>'+opts+'</select></td><td><button class="link" data-rm="'+i+'">빼기</button></td></tr>';
+      });
+      h+='</tbody></table></div>';
+      if(!state.att) h+='<p class="small muted" style="margin-top:8px">출석부 파일을 넣으면 대조를 시작합니다.</p>';
+      else if(!state.items.length) h+='<p class="small muted" style="margin-top:8px">생기부 일자 파일을 넣으면 대조를 시작합니다.</p>';
+    }
+    $('files').innerHTML=h;
+  }
+
+  function run(){
+    state.res=null;
+    if(state.att&&state.items.length){
+      state.items.forEach(function(it){if(!it.manual) it.course=Core.guessCourse(state.att,it.act,it.file)});
+      var ready=state.items.filter(function(it){return it.course});
+      if(ready.length) state.res=Core.analyze(state.att,ready);
+    }
+    renderFiles(); render();
+  }
+
+  function say(html,err){$('msg').innerHTML=html?'<div class="banner '+(err?'err':'sample')+'">'+html+'</div>':''}
+
+  function addFiles(list){
+    var files=[].slice.call(list).filter(function(f){return /\.xls[xm]?$/i.test(f.name)&&f.name.indexOf('~$')!==0});
+    if(!files.length){say('엑셀 파일(.xlsx)을 넣어 주세요.',true);return}
+    if(typeof XLSX==='undefined'){say('엑셀을 읽는 모듈을 불러오지 못했습니다. 인터넷 연결을 확인한 뒤 새로 고침 하세요.',true);return}
+    say('파일을 읽는 중입니다…');
+    var errs=[];
+    Promise.all(files.map(function(f){return f.arrayBuffer().then(function(buf){
+      var wb=XLSX.read(new Uint8Array(buf),Core.READ_OPTS);
+      var monthly=wb.SheetNames.some(function(n){return /^\d{1,2}월$/.test(n.trim())});
+      if(monthly){
+        var att=Core.parseAttendance(XLSX,wb);
+        if(!att.recs.length){errs.push(esc(f.name)+': 월별 시트에서 학생을 찾지 못했습니다. 출석부 양식을 확인하세요.');return}
+        state.att=att;state.attFile=f.name;
+      }else{
+        var act=Core.parseActivity(XLSX,wb);
+        if(!act.acts.length){errs.push(esc(f.name)+': 학생 이름과 활동 일자를 찾지 못했습니다. 출석부라면 시트 이름이 「3월」 형식인지 확인하세요.');return}
+        state.items=state.items.filter(function(it){return it.file!==f.name});
+        state.items.push({file:f.name,act:act,course:'',manual:false});
+      }
+    }).catch(function(e){errs.push(esc(f.name)+': 파일을 열 수 없습니다. 암호가 걸려 있거나 손상된 파일일 수 있습니다.')})}))
+    .then(function(){say(errs.join('<br>'),true);run()});
+  }
+
+  var drop=$('drop');
+  ['dragenter','dragover'].forEach(function(ev){document.addEventListener(ev,function(e){e.preventDefault();drop.classList.add('over')})});
+  ['dragleave','drop'].forEach(function(ev){document.addEventListener(ev,function(e){e.preventDefault();if(ev==='drop'||e.target===document.documentElement||!e.relatedTarget)drop.classList.remove('over')})});
+  document.addEventListener('drop',function(e){if(e.dataTransfer&&e.dataTransfer.files.length)addFiles(e.dataTransfer.files)});
+  $('pick').addEventListener('change',function(e){addFiles(e.target.files);e.target.value=''});
+  $('files').addEventListener('click',function(e){var k=e.target.getAttribute('data-rm');if(k==null)return;if(k==='att'){state.att=null;state.attFile=''}else state.items.splice(+k,1);run()});
+  $('files').addEventListener('change',function(e){var i=e.target.getAttribute('data-i');if(i==null)return;state.items[+i].course=e.target.value;state.items[+i].manual=true;run()});
+  $('tabs').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;state.tab=b.getAttribute('data-tab');render()});
+
+  var downloads=null,hosted=!!(window.claude&&window.claude.use);
+  if(hosted) window.claude.use('downloads').then(function(d){downloads=d}).catch(function(){});
+  function stamp(){var d=new Date();return (''+d.getFullYear()).slice(2)+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2)}
+  $('save').addEventListener('click',function(){
+    if(!state.res)return;
+    var meta='출석부: '+state.attFile+' / 대조일: '+new Date().toLocaleDateString('ko-KR');
+    var buf=XLSX.write(Core.toWorkbook(XLSX,state.res,meta),{type:'array',bookType:'xlsx'});
+    var blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),name='생기부_출석부_대조결과_'+stamp()+'.xlsx';
+    if(downloads){downloads.save({filename:name,data:blob}).then(function(){$('actionMsg').textContent='저장했습니다: '+name}).catch(function(err){$('actionMsg').textContent=err&&err.code==='declined'?'저장을 취소했습니다.':'이 화면에서는 파일을 저장할 수 없습니다. 「현재 표 복사」로 엑셀에 붙여 넣으세요.'})}
+    else if(!hosted){var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();$('actionMsg').textContent='저장했습니다: '+name}
+    else $('actionMsg').textContent='저장 기능을 준비 중입니다. 잠시 뒤 다시 누르거나 「현재 표 복사」를 이용하세요.';
+  });
+  $('copy').addEventListener('click',function(){
+    if(!state.res)return;
+    var cols=Core.COLS[state.tab],lines=[cols.map(function(c){return c[0]}).join('\t')];
+    state.res[state.tab].forEach(function(r){lines.push(cols.map(function(c){return String(r[c[1]]==null?'':r[c[1]]).replace(/[\t\n]/g,' ')}).join('\t'))});
+    navigator.clipboard.writeText(lines.join('\n')).then(function(){$('actionMsg').textContent='복사했습니다. 엑셀에 붙여 넣으세요.'}).catch(function(){$('actionMsg').textContent='복사하지 못했습니다. 표를 직접 선택해 복사하세요.'});
+  });
+  renderFiles();render();
+})();
+</script>
+</body>
+</html>
